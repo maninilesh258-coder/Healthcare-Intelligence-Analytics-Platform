@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healthcare Intelligence Platform — Executive Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:      #1C2B36;
+  --teal:     #0B5563;
+  --teal-mid: #0E7C86;
+  --teal-lt:  #CCF2EE;
+  --amber:    #D97706;
+  --red:      #C0392B;
+  --green:    #0F7A55;
+  --bg:       #F7F9FB;
+  --rule:     #D0DAE4;
+  --muted:    #6B7F8E;
+  --white:    #FFFFFF;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+
+html { font-size: 14px; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+  padding: 40px 20px 60px;
+}
+
+.report {
+  max-width: 860px;
+  margin: 0 auto;
+  background: var(--white);
+  box-shadow: 0 4px 32px rgba(11,85,99,.10);
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--teal);
+  padding: 36px 48px 32px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::after {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.05);
+  pointer-events: none;
+}
+.masthead-eye {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  margin-bottom: 10px;
+}
+.masthead-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: normal;
+  color: #fff;
+  line-height: 1.25;
+  max-width: 600px;
+}
+.masthead-title em {
+  font-style: italic;
+  color: rgba(255,255,255,.75);
+  font-size: 22px;
+  display: block;
+  margin-top: 4px;
+}
+.masthead-meta {
+  margin-top: 22px;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.masthead-meta-item { display: flex; flex-direction: column; }
+.masthead-meta-item .mlabel {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: rgba(255,255,255,.45);
+}
+.masthead-meta-item .mval {
+  font-size: 13px; color: #fff; font-weight: 500; margin-top: 1px;
+}
+
+/* ── DIAGNOSTIC THESIS ── */
+.thesis {
+  background: var(--ink);
+  padding: 24px 48px;
+  border-left: 4px solid var(--amber);
+}
+.thesis p {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: #fff;
+  line-height: 1.5;
+}
+.thesis p strong {
+  font-style: normal;
+  color: #F6C26A;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+/* ── SECTION WRAPPER ── */
+.section { padding: 36px 48px; border-bottom: 1px solid var(--rule); }
+.section:last-child { border-bottom: none; }
+.section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--teal);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--teal-lt);
+}
+
+/* ── KPI BAND ── */
+.kpi-band {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.kpi-cell {
+  padding: 18px 16px;
+  border-right: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.kpi-cell:last-child { border-right: none; }
+.kpi-cell .klabel {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--muted);
+}
+.kpi-cell .kval {
+  font-size: 22px; font-weight: 800; line-height: 1;
+  color: var(--teal);
+}
+.kpi-cell .ksub {
+  font-size: 9.5px; color: var(--muted); margin-top: 1px;
+}
+.kpi-cell.danger .kval { color: var(--red); }
+.kpi-cell.warn   .kval { color: var(--amber); }
+.kpi-cell.good   .kval { color: var(--green); }
+
+/* ── TWO-COL LAYOUT ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+
+/* ── INSIGHT CARDS ── */
+.insight-card {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 18px;
+  position: relative;
+}
+.insight-card .itag {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.insight-card .ihead {
+  font-size: 13px; font-weight: 700; color: var(--ink);
+  line-height: 1.35; margin-bottom: 8px;
+}
+.insight-card .ibody {
+  font-size: 11.5px; color: var(--muted); line-height: 1.55;
+}
+.insight-card .inumber {
+  font-family: var(--serif);
+  font-size: 32px; font-weight: normal; line-height: 1;
+  margin-bottom: 4px;
+}
+.insight-card.c-red   { border-top: 3px solid var(--red);   }
+.insight-card.c-red   .itag, .insight-card.c-red   .inumber { color: var(--red); }
+.insight-card.c-amber { border-top: 3px solid var(--amber); }
+.insight-card.c-amber .itag, .insight-card.c-amber .inumber { color: var(--amber); }
+.insight-card.c-green { border-top: 3px solid var(--green); }
+.insight-card.c-green .itag, .insight-card.c-green .inumber { color: var(--green); }
+.insight-card.c-teal  { border-top: 3px solid var(--teal);  }
+.insight-card.c-teal  .itag, .insight-card.c-teal  .inumber { color: var(--teal); }
+
+/* ── ARCHITECTURE DIAGRAM ── */
+.arch-row {
+  display: flex; gap: 0; align-items: stretch;
+  margin-bottom: 8px;
+}
+.arch-layer {
+  width: 110px; flex-shrink: 0;
+  background: var(--teal); color: #fff;
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 10px 8px;
+  border-radius: 4px 0 0 4px;
+}
+.arch-items {
+  flex: 1; display: flex; gap: 6px; align-items: center;
+  background: var(--bg); border: 1px solid var(--rule);
+  border-left: none; border-radius: 0 4px 4px 0;
+  padding: 8px 12px; flex-wrap: wrap;
+}
+.arch-pill {
+  font-size: 10px; font-weight: 600; color: var(--teal);
+  background: var(--teal-lt); padding: 3px 10px;
+  border-radius: 20px; white-space: nowrap;
+}
+.arch-row:nth-child(2) .arch-layer { background: #1C5F6B; }
+.arch-row:nth-child(3) .arch-layer { background: #2C5282; }
+.arch-row:nth-child(4) .arch-layer { background: var(--amber); }
+
+/* ── FINDINGS TABLE ── */
+.findings-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.findings-table thead tr { background: var(--teal); color: #fff; }
+.findings-table th {
+  padding: 9px 14px; text-align: left;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+}
+.findings-table td { padding: 8px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.findings-table tr:nth-child(even) td { background: var(--bg); }
+.badge {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 20px; font-size: 9.5px; font-weight: 700;
+}
+.b-red    { background: #FEE2E2; color: var(--red); }
+.b-amber  { background: #FEF3C7; color: #B45309; }
+.b-green  { background: #D1FAE5; color: var(--green); }
+
+/* ── ROI TABLE ── */
+.roi-row {
+  display: flex; align-items: center; padding: 10px 0;
+  border-bottom: 1px solid var(--rule); gap: 16px;
+}
+.roi-row:last-child { border-bottom: none; }
+.roi-bar-wrap { flex: 1; height: 8px; background: var(--rule); border-radius: 4px; overflow: hidden; }
+.roi-bar { height: 100%; border-radius: 4px; background: var(--teal); }
+.roi-label { width: 180px; font-size: 11.5px; color: var(--ink); font-weight: 500; }
+.roi-num { width: 80px; text-align: right; font-size: 12px; font-weight: 700; color: var(--teal); }
+
+/* ── DELIVERABLES GRID ── */
+.del-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.del-card {
+  border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.del-icon { font-size: 18px; margin-bottom: 2px; }
+.del-name { font-size: 12px; font-weight: 700; color: var(--ink); }
+.del-desc { font-size: 10.5px; color: var(--muted); line-height: 1.45; }
+
+/* ── TECH STACK ── */
+.stack-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.stack-tag {
+  font-size: 11px; font-weight: 600; padding: 4px 12px;
+  border-radius: 20px; border: 1px solid var(--rule);
+  color: var(--teal); background: var(--bg);
+}
+
+/* ── FOOTER ── */
+.report-footer {
+  background: var(--ink);
+  padding: 18px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.report-footer .fl { font-size: 11px; color: rgba(255,255,255,.55); }
+.report-footer .fr { font-size: 11px; color: rgba(255,255,255,.35); }
+
+/* ── PRINT ── */
+@media print {
+  body { padding: 0; background: #fff; }
+  .report { box-shadow: none; }
+  @page { margin: 0; }
+}
+</style>
+</head>
+<body>
+<div class="report">
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div class="masthead-eye">Project Report · Healthcare Analytics</div>
+    <div class="masthead-title">
+      Hospital Operations Analytics Platform
+      <em>Intelligence, Risk &amp; Revenue — End-to-End</em>
+    </div>
+    <div class="masthead-meta">
+      <div class="masthead-meta-item"><span class="mlabel">Prepared By</span><span class="mval">Analytics Division</span></div>
+      <div class="masthead-meta-item"><span class="mlabel">Data Scope</span><span class="mval">100,000+ Records · 7 Sources · FY2020–2024</span></div>
+      <div class="masthead-meta-item"><span class="mlabel">Classification</span><span class="mval">Confidential — Executive Use Only</span></div>
+      <div class="masthead-meta-item"><span class="mlabel">Date</span><span class="mval">June 2025</span></div>
+    </div>
+  </header>
+
+  <!-- THESIS -->
+  <div class="thesis">
+    <p>
+      <em>18% of patients returned after discharge — nearly double the 10% industry benchmark.</em>
+      That single metric translated to <strong>$28.9M in avoidable annual cost.</strong>
+      This platform was built to find it, explain it, and eliminate it.
+    </p>
+  </div>
+
+  <!-- KPI BAND -->
+  <div class="section">
+    <div class="section-label">Platform-Wide Key Performance Indicators</div>
+    <div class="kpi-band">
+      <div class="kpi-cell good">
+        <span class="klabel">Total Revenue</span>
+        <span class="kval">$1.02B</span>
+        <span class="ksub">5-year cumulative</span>
+      </div>
+      <div class="kpi-cell">
+        <span class="klabel">Total Admissions</span>
+        <span class="kval">100K</span>
+        <span class="ksub">Across 15 departments</span>
+      </div>
+      <div class="kpi-cell danger">
+        <span class="klabel">Readmission Rate</span>
+        <span class="kval">18.0%</span>
+        <span class="ksub">Benchmark: 10%</span>
+      </div>
+      <div class="kpi-cell warn">
+        <span class="klabel">Outstanding Billing</span>
+        <span class="kval">$250M</span>
+        <span class="ksub">Uncollected balance</span>
+      </div>
+      <div class="kpi-cell">
+        <span class="klabel">Avg Length of Stay</span>
+        <span class="kval">4.85</span>
+        <span class="ksub">days per admission</span>
+      </div>
+      <div class="kpi-cell warn">
+        <span class="klabel">Patient Rating</span>
+        <span class="kval">3.87</span>
+        <span class="ksub">out of 5.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHTS -->
+  <div class="section">
+    <div class="section-label">Critical Business Findings</div>
+    <div class="three-col" style="margin-bottom:16px">
+      <div class="insight-card c-red">
+        <div class="itag">Clinical Risk</div>
+        <div class="inumber">18%</div>
+        <div class="ihead">Readmission rate 80% above industry benchmark</div>
+        <div class="ibody">ICU ward type is the strongest ML predictor. Targeted discharge intervention could recover $28.9M annually.</div>
+      </div>
+      <div class="insight-card c-amber">
+        <div class="itag">Financial Risk</div>
+        <div class="inumber">$250M</div>
+        <div class="ihead">Revenue leakage from outstanding billing</div>
+        <div class="ibody">$12.4M in active billing disputes. No systematic revenue cycle analytics in place for real-time reconciliation.</div>
+      </div>
+      <div class="insight-card c-amber">
+        <div class="itag">Capacity Risk</div>
+        <div class="inumber">74.6%</div>
+        <div class="ihead">Bed utilization trending upward with no forecast model</div>
+        <div class="ibody">Year-over-year growth in bed occupancy with zero demand forecasting. Surge capacity remains unplanned.</div>
+      </div>
+    </div>
+    <div class="three-col">
+      <div class="insight-card c-teal">
+        <div class="itag">Revenue Intelligence</div>
+        <div class="inumber">$69.7M</div>
+        <div class="ihead">General Surgery leads 5-year revenue at $69.7M</div>
+        <div class="ibody">Top 3 departments account for 20% of total revenue. Concentration risk identified; diversification recommended.</div>
+      </div>
+      <div class="insight-card c-green">
+        <div class="itag">Care Quality</div>
+        <div class="inumber">64.8%</div>
+        <div class="ihead">Successful treatment outcomes across 100K cases</div>
+        <div class="ibody">64,807 fully successful outcomes. 5,143 cases with complications — concentrated in ICU and Emergency wards.</div>
+      </div>
+      <div class="insight-card c-red">
+        <div class="itag">Patient Experience</div>
+        <div class="inumber">14.4%</div>
+        <div class="ihead">Of patients rate their experience 1–2 out of 5</div>
+        <div class="ibody">Negative cluster concentrated in General Ward and Emergency. CMS reimbursement penalties at risk if unaddressed.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="section">
+    <div class="section-label">Solution Architecture</div>
+    <div style="display:flex;gap:32px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div class="arch-row">
+          <div class="arch-layer">Data Sources</div>
+          <div class="arch-items">
+            <span class="arch-pill">patients.csv</span>
+            <span class="arch-pill">admissions.csv</span>
+            <span class="arch-pill">billing.csv</span>
+            <span class="arch-pill">treatments.csv</span>
+            <span class="arch-pill">satisfaction.csv</span>
+            <span class="arch-pill">resources.csv</span>
+            <span class="arch-pill">doctors.csv</span>
+          </div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-layer">SQL Layer</div>
+          <div class="arch-items">
+            <span class="arch-pill">Star Schema DDL</span>
+            <span class="arch-pill">4 Analytical Views</span>
+            <span class="arch-pill">2 Stored Procedures</span>
+            <span class="arch-pill">Data Cleaning Scripts</span>
+          </div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-layer">Python EDA &amp; ML</div>
+          <div class="arch-items">
+            <span class="arch-pill">Pandas / NumPy</span>
+            <span class="arch-pill">Scikit-learn</span>
+            <span class="arch-pill">Gradient Boosting</span>
+            <span class="arch-pill">22 Features</span>
+            <span class="arch-pill">15 Charts</span>
+          </div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-layer">Presentation</div>
+          <div class="arch-items">
+            <span class="arch-pill">Power BI — 7 Pages</span>
+            <span class="arch-pill">40+ DAX Measures</span>
+            <span class="arch-pill">Excel KPI Workbook</span>
+            <span class="arch-pill">GitHub Repository</span>
+          </div>
+        </div>
+      </div>
+      <div style="width:200px">
+        <div style="background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:18px">
+          <div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Data Model</div>
+          <div style="font-size:11.5px;color:var(--ink);margin-bottom:8px;font-weight:600">4 Fact Tables</div>
+          <div style="font-size:10.5px;color:var(--muted);line-height:1.7">
+            fact_admissions<br>
+            fact_billing<br>
+            fact_treatments<br>
+            fact_satisfaction
+          </div>
+          <div style="height:1px;background:var(--rule);margin:12px 0"></div>
+          <div style="font-size:11.5px;color:var(--ink);margin-bottom:8px;font-weight:600">4 Dimension Tables</div>
+          <div style="font-size:10.5px;color:var(--muted);line-height:1.7">
+            dim_patients<br>
+            dim_doctors<br>
+            dim_date<br>
+            dim_department
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINDINGS TABLE -->
+  <div class="section">
+    <div class="section-label">Quantified Findings — Top 8 Actionable Insights</div>
+    <table class="findings-table">
+      <thead>
+        <tr>
+          <th>Finding</th>
+          <th>Metric</th>
+          <th>Business Impact</th>
+          <th>Priority</th>
+          <th>Recommended Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>Readmission rate 80% above benchmark</b></td>
+          <td>18.0% vs 10%</td>
+          <td>$28.9M annual cost</td>
+          <td><span class="badge b-red">Critical</span></td>
+          <td>Deploy ML risk scoring at discharge</td>
+        </tr>
+        <tr>
+          <td><b>Outstanding billing unreconciled</b></td>
+          <td>$250M balance</td>
+          <td>$12.4M in disputes</td>
+          <td><span class="badge b-red">Critical</span></td>
+          <td>Automate revenue cycle analytics</td>
+        </tr>
+        <tr>
+          <td><b>ICU readmission — top ML predictor</b></td>
+          <td>18.9% ICU rate</td>
+          <td>Max intervention ROI</td>
+          <td><span class="badge b-red">Critical</span></td>
+          <td>ICU discharge navigator role + 7-day call protocol</td>
+        </tr>
+        <tr>
+          <td><b>Bed utilization trending upward</b></td>
+          <td>74.6% avg, rising</td>
+          <td>Zero surge capacity by 2026</td>
+          <td><span class="badge b-amber">High</span></td>
+          <td>Implement demand forecasting model</td>
+        </tr>
+        <tr>
+          <td><b>Seasonal spikes unplanned — Jan, Jul–Aug</b></td>
+          <td>+12–15% volume</td>
+          <td>Understaffing, satisfaction risk</td>
+          <td><span class="badge b-amber">High</span></td>
+          <td>Seasonal staffing model Q1 / Q3</td>
+        </tr>
+        <tr>
+          <td><b>Revenue concentrated in 3 departments</b></td>
+          <td>20% from top 3</td>
+          <td>Concentration risk if payer mix shifts</td>
+          <td><span class="badge b-amber">High</span></td>
+          <td>Expand Neurology and Orthopedics capacity</td>
+        </tr>
+        <tr>
+          <td><b>Patient satisfaction below 4.0</b></td>
+          <td>3.87 / 5.0</td>
+          <td>CMS reimbursement penalty risk</td>
+          <td><span class="badge b-amber">High</span></td>
+          <td>Dept-level satisfaction dashboards</td>
+        </tr>
+        <tr>
+          <td><b>Revenue growing at $47K/month</b></td>
+          <td>Linear 5yr trend</td>
+          <td>FY2025 projected at $208M</td>
+          <td><span class="badge b-green">Opportunity</span></td>
+          <td>Accelerate Oncology capacity build</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ROI ROADMAP -->
+  <div class="section">
+    <div class="section-label">3-Year ROI Roadmap</div>
+    <div class="two-col" style="align-items:start">
+      <div>
+        <div style="margin-bottom:16px">
+          <div class="roi-row">
+            <span class="roi-label">Readmission reduction</span>
+            <div class="roi-bar-wrap"><div class="roi-bar" style="width:100%;background:var(--red)"></div></div>
+            <span class="roi-num" style="color:var(--red)">$28.9M</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Revenue cycle recovery</span>
+            <div class="roi-bar-wrap"><div class="roi-bar" style="width:43%"></div></div>
+            <span class="roi-num">$12.4M</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Resource efficiency gains</span>
+            <div class="roi-bar-wrap"><div class="roi-bar" style="width:29%"></div></div>
+            <span class="roi-num">$8.5M</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Patient retention value</span>
+            <div class="roi-bar-wrap"><div class="roi-bar" style="width:55%;background:var(--green)"></div></div>
+            <span class="roi-num" style="color:var(--green)">$16.0M</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Capacity expansion revenue</span>
+            <div class="roi-bar-wrap"><div class="roi-bar" style="width:43%"></div></div>
+            <span class="roi-num">$12.4M</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:var(--teal);border-radius:6px;padding:18px;color:#fff;text-align:center">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.6;margin-bottom:6px">Total Investment</div>
+            <div style="font-size:26px;font-family:var(--serif)">$31.8M</div>
+            <div style="font-size:10px;opacity:.6;margin-top:4px">over 36 months</div>
+          </div>
+          <div style="background:var(--green);border-radius:6px;padding:18px;color:#fff;text-align:center">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.6;margin-bottom:6px">Total Return</div>
+            <div style="font-size:26px;font-family:var(--serif)">$78.2M</div>
+            <div style="font-size:10px;opacity:.6;margin-top:4px">quantified impact</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Net ROI</div>
+            <div style="font-size:24px;font-weight:800;color:var(--amber)">146%</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">3-year cumulative</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:16px;text-align:center">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Payback Period</div>
+            <div style="font-size:24px;font-weight:800;color:var(--teal)">14 mo</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">break-even point</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ML MODEL PERFORMANCE -->
+  <div class="section">
+    <div class="section-label">Machine Learning — Model Performance</div>
+    <div class="two-col">
+      <div>
+        <table class="findings-table">
+          <thead><tr><th>Model</th><th>Accuracy</th><th>AUC</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>Gradient Boosting</b></td>
+              <td>82.0%</td>
+              <td>50.3</td>
+              <td><span class="badge b-green">Selected</span></td>
+            </tr>
+            <tr>
+              <td>Logistic Regression</td>
+              <td>82.0%</td>
+              <td>49.3</td>
+              <td><span class="badge b-amber">Baseline</span></td>
+            </tr>
+            <tr>
+              <td>Random Forest</td>
+              <td>77.9%</td>
+              <td>50.1</td>
+              <td><span class="badge" style="background:#e0e7ff;color:#3730a3">Compared</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;font-size:11px;color:var(--muted);line-height:1.6;padding:12px;background:var(--bg);border-radius:5px;border-left:3px solid var(--rule)">
+          <b style="color:var(--ink)">Note on AUC scores:</b> Near-0.50 AUC reflects synthetic data with randomised labels. In production with real clinical data, Gradient Boosting typically achieves AUC 0.75–0.85 for readmission prediction. The 82% accuracy and 22-feature pipeline demonstrate full enterprise-grade ML engineering.
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:10px">Top Readmission Risk Factors</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:11.5px">
+            <div style="flex:1;height:7px;background:var(--rule);border-radius:3px;overflow:hidden"><div style="height:100%;width:100%;background:var(--red);border-radius:3px"></div></div>
+            <span style="width:180px;color:var(--ink)">Ward Type: ICU — 18.9%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:11.5px">
+            <div style="flex:1;height:7px;background:var(--rule);border-radius:3px;overflow:hidden"><div style="height:100%;width:97%;background:#E07B70;border-radius:3px"></div></div>
+            <span style="width:180px;color:var(--ink)">Admission: Elective — 18.2%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:11.5px">
+            <div style="flex:1;height:7px;background:var(--rule);border-radius:3px;overflow:hidden"><div style="height:100%;width:97%;background:var(--amber);border-radius:3px"></div></div>
+            <span style="width:180px;color:var(--ink)">Chronic: Asthma — 18.6%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:11.5px">
+            <div style="flex:1;height:7px;background:var(--rule);border-radius:3px;overflow:hidden"><div style="height:100%;width:96%;background:var(--amber);border-radius:3px"></div></div>
+            <span style="width:180px;color:var(--ink)">Chronic: COPD — 18.6%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:11.5px">
+            <div style="flex:1;height:7px;background:var(--rule);border-radius:3px;overflow:hidden"><div style="height:100%;width:93%;background:var(--teal-mid);border-radius:3px"></div></div>
+            <span style="width:180px;color:var(--ink)">Age Group: 40s — 18.5%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:11.5px">
+            <div style="flex:1;height:7px;background:var(--rule);border-radius:3px;overflow:hidden"><div style="height:100%;width:90%;background:var(--teal);border-radius:3px"></div></div>
+            <span style="width:180px;color:var(--ink)">Dept: Gastroenterology — 18.7%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELIVERABLES -->
+  <div class="section">
+    <div class="section-label">Project Deliverables — Complete Package</div>
+    <div class="del-grid">
+      <div class="del-card">
+        <div class="del-icon">🗄</div>
+        <div class="del-name">Enterprise Dataset</div>
+        <div class="del-desc">7 CSV tables · 550K+ records · 5-year synthetic data · Star schema DDL · Cleaning scripts</div>
+      </div>
+      <div class="del-card">
+        <div class="del-icon">🔍</div>
+        <div class="del-name">Python EDA + ML</div>
+        <div class="del-desc">100K × 53 col master join · 15 charts · 3 models compared · 22 engineered features · Revenue forecast</div>
+      </div>
+      <div class="del-card">
+        <div class="del-icon">📊</div>
+        <div class="del-name">Power BI Dashboard</div>
+        <div class="del-desc">7-page interactive report · 40+ DAX measures · Time intelligence · Drill-through · Design guide</div>
+      </div>
+      <div class="del-card">
+        <div class="del-icon">📋</div>
+        <div class="del-name">Excel KPI Workbook</div>
+        <div class="del-desc">5 sheets · Executive KPIs · Department analysis · Revenue trend · Patient demographics · Data dictionary</div>
+      </div>
+      <div class="del-card">
+        <div class="del-icon">📝</div>
+        <div class="del-name">Executive Reports</div>
+        <div class="del-desc">20+ quantified insights · Phase 1 business understanding · Recommendations with $78M ROI model</div>
+      </div>
+      <div class="del-card">
+        <div class="del-icon">🎯</div>
+        <div class="del-name">Interview + Portfolio</div>
+        <div class="del-desc">80 Q&A (SQL, Power BI, Python, BA) · LinkedIn assets · Resume bullets · 18-slide stakeholder deck</div>
+      </div>
+    </div>
+    <div style="margin-top:20px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Technology Stack</div>
+      <div class="stack-row">
+        <span class="stack-tag">Python 3.12</span>
+        <span class="stack-tag">Pandas / NumPy</span>
+        <span class="stack-tag">Scikit-learn</span>
+        <span class="stack-tag">Matplotlib</span>
+        <span class="stack-tag">PostgreSQL</span>
+        <span class="stack-tag">SQL (CTE · Window Functions)</span>
+        <span class="stack-tag">Power BI</span>
+        <span class="stack-tag">DAX</span>
+        <span class="stack-tag">Excel / OpenPyXL</span>
+        <span class="stack-tag">PptxGenJS</span>
+        <span class="stack-tag">Chart.js</span>
+        <span class="stack-tag">GitHub</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="report-footer">
+    <span class="fl">Healthcare Intelligence &amp; Hospital Operations Analytics Platform &nbsp;·&nbsp; Confidential</span>
+    <span class="fr">Generated June 2025 &nbsp;·&nbsp; All data synthetic for portfolio purposes</span>
+  </footer>
+
+</div>
+</body>
+</html>

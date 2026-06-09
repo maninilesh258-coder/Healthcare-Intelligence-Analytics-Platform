@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healthcare Intelligence Platform — Analytics Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy:   #0D1B2A;
+    --teal:   #0E7C86;
+    --teal2:  #12A89A;
+    --mint:   #CCF2EE;
+    --slate:  #475569;
+    --muted:  #94A3B8;
+    --light:  #E2E8F0;
+    --off:    #F4F7F9;
+    --white:  #FFFFFF;
+    --gold:   #F59E0B;
+    --green:  #10B981;
+    --red:    #EF4444;
+    --purple: #7C3AED;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--off); color: var(--navy); min-height: 100vh; }
+
+  /* ── TOP NAV ── */
+  .topbar {
+    background: var(--navy); color: #fff; padding: 0 24px;
+    display: flex; align-items: center; gap: 16px; height: 52px;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px #0004;
+  }
+  .topbar .brand { font-size: 15px; font-weight: 700; color: var(--teal2); letter-spacing: .5px; white-space: nowrap; }
+  .topbar .tagline { font-size: 11px; color: var(--muted); }
+  .topbar-right { margin-left: auto; font-size: 11px; color: var(--muted); }
+
+  /* ── PAGE NAV ── */
+  .page-nav {
+    background: var(--white); border-bottom: 1px solid var(--light);
+    display: flex; overflow-x: auto; gap: 0; padding: 0 16px;
+    position: sticky; top: 52px; z-index: 99; scrollbar-width: none;
+  }
+  .page-nav::-webkit-scrollbar { display: none; }
+  .page-btn {
+    padding: 12px 18px; font-size: 12px; font-weight: 600; color: var(--slate);
+    border: none; background: none; cursor: pointer; white-space: nowrap;
+    border-bottom: 3px solid transparent; transition: all .2s;
+  }
+  .page-btn:hover { color: var(--teal); }
+  .page-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+  /* ── PAGE CONTAINER ── */
+  .page { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── PAGE HEADER ── */
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .page-header p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* ── KPI STRIP ── */
+  .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--white); border-radius: 10px; padding: 16px;
+    border: 1px solid var(--light); box-shadow: 0 1px 4px #0001;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .kpi-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: var(--teal); line-height: 1; }
+  .kpi-sub { font-size: 10px; color: var(--slate); }
+  .kpi-card.red .kpi-value { color: var(--red); }
+  .kpi-card.gold .kpi-value { color: var(--gold); }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.purple .kpi-value { color: var(--purple); }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px; }
+  .grid-full { margin-bottom: 16px; }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-2-1, .grid-1-2 { grid-template-columns: 1fr; }
+  }
+
+  /* ── CHART CARD ── */
+  .chart-card {
+    background: var(--white); border-radius: 10px; padding: 16px;
+    border: 1px solid var(--light); box-shadow: 0 1px 4px #0001;
+  }
+  .chart-card h3 { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .chart-card .chart-sub { font-size: 10px; color: var(--muted); margin-top: -8px; margin-bottom: 12px; }
+  .chart-wrap { position: relative; width: 100%; }
+  .chart-wrap canvas { max-width: 100%; }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .data-table th { background: var(--navy); color: #fff; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .3px; }
+  .data-table td { padding: 7px 12px; border-bottom: 1px solid var(--light); }
+  .data-table tr:nth-child(even) td { background: var(--off); }
+  .data-table tr:hover td { background: var(--mint); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .badge-red { background: #FEE2E2; color: var(--red); }
+  .badge-amber { background: #FEF3C7; color: #D97706; }
+  .badge-green { background: #D1FAE5; color: var(--green); }
+
+  /* ── GAUGE ── */
+  .gauge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .gauge-wrap { text-align: center; }
+  .gauge-label { font-size: 11px; color: var(--slate); margin-top: 4px; }
+  .gauge-value { font-size: 20px; font-weight: 800; }
+
+  /* ── WATERFALL LEGEND ── */
+  .wf-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  .wf-leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--slate); }
+  .wf-leg-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── STAT ROW ── */
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat-pill { background: var(--navy); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 12px; }
+  .stat-pill span { color: var(--teal2); font-weight: 800; font-size: 14px; }
+
+  /* ── FORECAST LEGEND ── */
+  .legend-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px; }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--slate); }
+  .leg-line { width: 24px; height: 3px; border-radius: 2px; }
+  .leg-dash { width: 24px; height: 0; border-top: 3px dashed; }
+
+  /* ── RISK INDICATOR ── */
+  .risk-badge { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .risk-high { background: #FEE2E2; color: var(--red); }
+  .risk-med  { background: #FEF3C7; color: #D97706; }
+  .risk-low  { background: #D1FAE5; color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="brand">🏥 Healthcare Intelligence Platform</div>
+    <div class="tagline">Hospital Operations Analytics — 100,000+ Records · 7 Data Sources · 5-Year Analysis</div>
+  </div>
+  <div class="topbar-right">FY2020–2024 &nbsp;|&nbsp; Confidential</div>
+</div>
+
+<nav class="page-nav">
+  <button class="page-btn active" onclick="showPage('p1',this)">📊 Executive</button>
+  <button class="page-btn" onclick="showPage('p2',this)">👥 Patient Insights</button>
+  <button class="page-btn" onclick="showPage('p3',this)">💰 Financial</button>
+  <button class="page-btn" onclick="showPage('p4',this)">🏗 Resources</button>
+  <button class="page-btn" onclick="showPage('p5',this)">👨‍⚕️ Doctors</button>
+  <button class="page-btn" onclick="showPage('p6',this)">🤖 Predictive</button>
+  <button class="page-btn" onclick="showPage('p7',this)">📈 Forecast</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE 1 — EXECUTIVE DASHBOARD
+═══════════════════════════════════════════════════════════ -->
+<div id="p1" class="page active">
+  <div class="page-header">
+    <h1>Executive Dashboard</h1>
+    <p>C-suite snapshot of hospital performance across all departments · FY2020–2024</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kpi-label">Total Admissions</div><div class="kpi-value">100K</div><div class="kpi-sub">Across 15 departments</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Total Revenue</div><div class="kpi-value">$1.02B</div><div class="kpi-sub">5-year cumulative</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Readmission Rate</div><div class="kpi-value">18.0%</div><div class="kpi-sub">↑ 80% above benchmark</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Length of Stay</div><div class="kpi-value">4.85</div><div class="kpi-sub">days per admission</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Avg Patient Rating</div><div class="kpi-value">3.87</div><div class="kpi-sub">out of 5.0</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Outstanding Balance</div><div class="kpi-value">$250M</div><div class="kpi-sub">uncollected billing</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Monthly Admissions Trend — 2024 vs 2023</h3>
+      <div class="chart-sub">Year-over-year comparison of inpatient admission volumes</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_admTrend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Revenue by Department</h3>
+      <div class="chart-sub">Top 10 departments by total revenue ($M) — 5-year</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_deptRev"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Treatment Outcome Breakdown</h3>
+      <div class="chart-sub">Discharge outcomes across all 100,000 admissions</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_outcomes"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Patient Insurance Mix</h3>
+      <div class="chart-sub">Insurance coverage type distribution across patient population</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_insurance"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card grid-full">
+    <h3>Department Performance KPI Table</h3>
+    <div class="chart-sub">Admissions · Revenue · Readmission Rate · Patient Rating by department</div>
+    <table class="data-table" id="deptTable"></table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE 2 — PATIENT INSIGHTS
+═══════════════════════════════════════════════════════════ -->
+<div id="p2" class="page">
+  <div class="page-header">
+    <h1>Patient Insights</h1>
+    <p>Demographics, behaviour, admission patterns and chronic condition analysis</p>
+  </div>
+
+  <div class="grid-3">
+    <div class="chart-card">
+      <h3>Age Distribution</h3>
+      <div class="chart-sub">Patient count by decade age group</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_age"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Gender Split</h3>
+      <div class="chart-sub">Patient population by gender</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_gender"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Insurance vs Avg Treatment Cost</h3>
+      <div class="chart-sub">Mean treatment cost ($) by insurance type</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_insCost"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Chronic Condition vs Readmission Rate</h3>
+      <div class="chart-sub">Readmission % by chronic condition — top 5 conditions</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_chronic"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Admission Type by Year</h3>
+      <div class="chart-sub">Stacked volume of Emergency / Urgent / Elective / Observation (2020–2024)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_admType"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card grid-full">
+    <h3>Monthly Admission Heatmap — Volume by Year × Month</h3>
+    <div class="chart-sub">Identifies seasonal peaks and year-over-year volume trends</div>
+    <div class="chart-wrap" style="height:180px"><canvas id="c_heatmap"></canvas></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE 3 — FINANCIAL DASHBOARD
+═══════════════════════════════════════════════════════════ -->
+<div id="p3" class="page">
+  <div class="page-header">
+    <h1>Financial Dashboard</h1>
+    <p>Revenue intelligence, billing analytics and collection performance</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card green"><div class="kpi-label">Total Revenue</div><div class="kpi-value">$1.02B</div><div class="kpi-sub">5-year cumulative</div></div>
+    <div class="kpi-card"><div class="kpi-label">Insurance Coverage</div><div class="kpi-value">$387M</div><div class="kpi-sub">38% of revenue</div></div>
+    <div class="kpi-card"><div class="kpi-label">Patient Payments</div><div class="kpi-value">$427M</div><div class="kpi-sub">42% of revenue</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Outstanding Balance</div><div class="kpi-value">$250M</div><div class="kpi-sub">24.6% uncollected</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Collection Rate</div><div class="kpi-value">75.4%</div><div class="kpi-sub">Paid + Partial</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Monthly Revenue Trend — 2024 vs 2023 ($M)</h3>
+      <div class="chart-sub">Monthly revenue comparison with prior year overlay</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_revTrend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Annual Revenue Trend ($M)</h3>
+      <div class="chart-sub">Year-over-year total revenue (2020–2024)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_annualRev"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Revenue Components — Waterfall</h3>
+      <div class="chart-sub">Insurance + Patient Payments vs Outstanding Balance</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_waterfall"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Payment Status Distribution</h3>
+      <div class="chart-sub">Billing status breakdown across all 100K invoices</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_payStatus"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card grid-full">
+    <h3>Outstanding Balance by Department ($K)</h3>
+    <div class="chart-sub">Top 8 departments by uncollected outstanding billing balance</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="c_outstanding"></canvas></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE 4 — RESOURCE UTILIZATION
+═══════════════════════════════════════════════════════════ -->
+<div id="p4" class="page">
+  <div class="page-header">
+    <h1>Resource Utilization</h1>
+    <p>Operational capacity management — Bed, ICU, Equipment and Staffing analytics</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card red"><div class="kpi-label">Avg Bed Utilization</div><div class="kpi-value">74.6%</div><div class="kpi-sub">Target: &lt;85%</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Avg ICU Utilization</div><div class="kpi-value">25.5%</div><div class="kpi-sub">Daily avg across all depts</div></div>
+    <div class="kpi-card"><div class="kpi-label">Equipment Utilization</div><div class="kpi-value">67.5%</div><div class="kpi-sub">Avg across departments</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Peak Bed (2024)</div><div class="kpi-value">75.1%</div><div class="kpi-sub">May 2024 peak</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Bed vs ICU Utilization — Monthly 2024 (%)</h3>
+      <div class="chart-sub">Month-by-month resource utilization trend with target reference lines</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_resTrend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Resource Utilization by Department (%)</h3>
+      <div class="chart-sub">Bed, ICU and Equipment utilization rates — top 10 departments</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_resDept"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Operating Room vs Ventilator Usage (%)</h3>
+      <div class="chart-sub">Specialized resource utilization across departments — scatter view</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_resScatter"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Bed Utilization vs ICU — By Department</h3>
+      <div class="chart-sub">Side-by-side comparison for capacity planning decisions</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_bedIcu"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE 5 — DOCTOR PERFORMANCE
+═══════════════════════════════════════════════════════════ -->
+<div id="p5" class="page">
+  <div class="page-header">
+    <h1>Doctor Performance</h1>
+    <p>Physician revenue contribution, patient outcomes, ratings and workload distribution</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kpi-label">Total Doctors</div><div class="kpi-value">500</div><div class="kpi-sub">Across 15 departments</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Top Doctor Revenue</div><div class="kpi-value">$77.8M</div><div class="kpi-sub">Dr. Harris (5yr)</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Doctor Rating</div><div class="kpi-value">3.99</div><div class="kpi-sub">out of 5.0</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Max Patient Load</div><div class="kpi-value">7,503</div><div class="kpi-sub">Dr. Harris — 5yr count</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Top 10 Doctors by Revenue ($M)</h3>
+      <div class="chart-sub">5-year cumulative revenue generated per physician</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c_docRev"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Doctor Rating vs Readmission Rate</h3>
+      <div class="chart-sub">Scatter plot — bubble size proportional to patient volume</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c_docScatter"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Patient Workload — Top 10 Doctors</h3>
+      <div class="chart-sub">Total patients seen over 5 years</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_workload"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Avg Doctor Rating by Department</h3>
+      <div class="chart-sub">Department-level physician performance benchmark</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_deptRating"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE 6 — PREDICTIVE ANALYTICS
+═══════════════════════════════════════════════════════════ -->
+<div id="p6" class="page">
+  <div class="page-header">
+    <h1>Predictive Analytics</h1>
+    <p>ML-driven readmission risk intelligence · 3 models · 22 engineered features</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card red"><div class="kpi-label">Overall Readmission Rate</div><div class="kpi-value">18.0%</div><div class="kpi-sub">18,015 of 100K patients</div></div>
+    <div class="kpi-card purple"><div class="kpi-label">Best Model Accuracy</div><div class="kpi-value">82%</div><div class="kpi-sub">Gradient Boosting</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Engineered Features</div><div class="kpi-value">22</div><div class="kpi-sub">Cross-table derivations</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Savings Opportunity</div><div class="kpi-value">$28.9M</div><div class="kpi-sub">If reduced to 10% benchmark</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Readmission Risk by Ward Type</h3>
+      <div class="chart-sub">ICU shows highest readmission rate — strongest ML feature</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_riskWard"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Readmission Risk by Admission Type</h3>
+      <div class="chart-sub">Elective admissions paradoxically show highest readmission</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_riskAdm"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Readmission Risk by Age Group (%)</h3>
+      <div class="chart-sub">40s and 70+ age groups show elevated readmission rates</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_riskAge"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Readmission Risk by Chronic Condition</h3>
+      <div class="chart-sub">Asthma and COPD patients face highest readmission risk</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_riskChronic"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card grid-full">
+    <h3>ML Model Performance Comparison</h3>
+    <div class="chart-sub">Accuracy and AUC scores — Logistic Regression · Random Forest · Gradient Boosting</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="c_modelPerf"></canvas></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE 7 — FORECAST DASHBOARD
+═══════════════════════════════════════════════════════════ -->
+<div id="p7" class="page">
+  <div class="page-header">
+    <h1>Forecast Dashboard</h1>
+    <p>Forward-looking revenue and admission planning using trend analysis and moving averages</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card green"><div class="kpi-label">Revenue Growth Rate</div><div class="kpi-value">+$47K/mo</div><div class="kpi-sub">Linear trend 2020–2024</div></div>
+    <div class="kpi-card"><div class="kpi-label">FY2025 Projection</div><div class="kpi-value">$208M</div><div class="kpi-sub">Based on 5yr trend</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">3-Yr ROI Target</div><div class="kpi-value">$78M+</div><div class="kpi-sub">Analytics investment return</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Monthly Admissions</div><div class="kpi-value">1,678</div><div class="kpi-sub">2024 monthly average</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Annual Revenue Trend + 2-Year Forecast ($M)</h3>
+      <div class="chart-sub">Historical actuals (solid) with linear extrapolation forecast (dashed)</div>
+      <div class="legend-row">
+        <div class="leg-item"><div class="leg-line" style="background:var(--teal)"></div>Actual</div>
+        <div class="leg-item"><div class="leg-dash" style="border-color:var(--gold)"></div>Forecast</div>
+      </div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_revForecast"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Monthly Admission Forecast (Q1 2025)</h3>
+      <div class="chart-sub">2024 actuals + 3-month moving average projection</div>
+      <div class="legend-row">
+        <div class="leg-item"><div class="leg-line" style="background:var(--teal)"></div>Actual 2024</div>
+        <div class="leg-item"><div class="leg-dash" style="border-color:var(--red)"></div>3M MA Forecast</div>
+      </div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c_admForecast"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card grid-full">
+    <h3>Seasonal Admission Pattern — Monthly Averages (All Years)</h3>
+    <div class="chart-sub">Identifies Q1 winter and Q3 summer peaks for capacity planning</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="c_seasonal"></canvas></div>
+  </div>
+
+  <div class="chart-card grid-full">
+    <h3>Strategic ROI Roadmap — 3-Year Investment vs Return ($M)</h3>
+    <div class="chart-sub">Analytics platform investment phases vs quantified business returns</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="c_roi"></canvas></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const DATA = {"months_labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "kpi_total_adm": 100000, "kpi_total_rev": 1016.9, "kpi_readmit": 18.0, "kpi_avg_los": 4.85, "kpi_avg_rating": 3.87, "kpi_outstanding": 250.27, "monthly_adm_2024": [1636, 1571, 1718, 1618, 1685, 1662, 1685, 1660, 1667, 1680, 1674, 1749], "monthly_adm_2023": [1659, 1560, 1687, 1637, 1687, 1632, 1774, 1737, 1676, 1654, 1791, 1644], "dept_rev_labels": ["General Surgery", "Psychiatry", "Ophthalmology", "Emergency", "Nephrology", "Dermatology", "Neurology", "Orthopedics", "Urology", "Oncology"], "dept_rev_values": [69.69, 69.68, 69.15, 69.06, 68.34, 68.15, 68.1, 67.48, 67.46, 66.94], "outcome_labels": ["Successful", "Partial Recovery", "No Improvement", "Complications"], "outcome_values": [64807, 22016, 8034, 5143], "insurance_labels": ["Private", "Medicare", "Medicaid", "Government", "Self-Pay"], "insurance_values": [17510, 12530, 9920, 5038, 5002], "dept_table": [{"dept": "Emergency", "adm": 6792, "rev": 69.06, "readmit": 18.1, "rating": 3.86}, {"dept": "Neurology", "adm": 6730, "rev": 68.1, "readmit": 18.0, "rating": 3.88}, {"dept": "Ophthalmology", "adm": 6716, "rev": 69.15, "readmit": 18.0, "rating": 3.85}, {"dept": "Urology", "adm": 6715, "rev": 67.46, "readmit": 18.1, "rating": 3.89}, {"dept": "Oncology", "adm": 6714, "rev": 66.94, "readmit": 18.1, "rating": 3.88}, {"dept": "Psychiatry", "adm": 6696, "rev": 69.68, "readmit": 17.6, "rating": 3.88}, {"dept": "General Surgery", "adm": 6694, "rev": 69.69, "readmit": 18.3, "rating": 3.88}, {"dept": "Cardiology", "adm": 6673, "rev": 66.8, "readmit": 17.3, "rating": 3.86}, {"dept": "Dermatology", "adm": 6672, "rev": 68.15, "readmit": 18.3, "rating": 3.85}, {"dept": "ENT", "adm": 6653, "rev": 66.45, "readmit": 18.5, "rating": 3.87}, {"dept": "Orthopedics", "adm": 6637, "rev": 67.48, "readmit": 17.4, "rating": 3.9}, {"dept": "Gastroenterology", "adm": 6626, "rev": 66.6, "readmit": 18.7, "rating": 3.84}], "age_labels": ["<20", "20s", "30s", "40s", "50s", "60s", "70+"], "age_values": [11323, 5707, 5485, 5550, 5710, 5566, 10659], "gender_labels": ["Female", "Male", "Other"], "gender_values": [24944, 23997, 1059], "chronic_labels": ["Asthma", "COPD", "Diabetes", "Hypertension", "Heart Disease"], "chronic_readm": [18.6, 18.6, 18.3, 18.0, 17.7], "ins_cost_labels": ["Medicare", "Government", "Private", "Medicaid", "Self-Pay"], "ins_cost_values": [8234.0, 8144.0, 8116.0, 8076.0, 8075.0], "adm_type_years": [2020, 2021, 2022, 2023, 2024], "adm_type_emergency": [7114, 6879, 7026, 7185, 6982], "adm_type_urgent": [4940, 5000, 5018, 4937, 5067], "adm_type_elective": [5930, 5959, 5962, 6046, 5993], "adm_type_observation": [2016, 1944, 2069, 1970, 1963], "monthly_rev_2024": [15.14, 15.58, 17.17, 16.38, 17.23, 16.59, 18.17, 16.71, 16.71, 17.77, 17.01, 17.3], "monthly_rev_2023": [16.4, 15.03, 17.41, 16.37, 16.46, 16.3, 17.81, 18.66, 16.42, 17.72, 17.42, 17.05], "pay_labels": ["Paid", "Pending", "Partial", "Disputed"], "pay_values": [65355, 19972, 9747, 4926], "outstanding_labels": ["Neurology", "Emergency", "Ophthalmology", "Oncology", "Psychiatry", "Cardiology", "Urology", "General Surgery"], "outstanding_values": [17039.5, 16970.9, 16936.5, 16933.7, 16839.2, 16812.6, 16791.9, 16772.9], "yr_rev_labels": [2020, 2021, 2022, 2023, 2024], "yr_rev_values": [203.62, 201.14, 204.43, 203.04, 201.77], "waterfall_labels": ["Insurance", "Patient Pay", "Outstanding", "Net Revenue"], "waterfall_values": [387.0, 426.6, 250.3, 1016.9], "res_dept_labels": ["Orthopedics", "General Surgery", "Nephrology", "Ophthalmology", "Urology", "Gastroenterology", "Oncology", "ENT", "Dermatology", "Emergency"], "res_bed": [74.9, 74.8, 74.8, 74.8, 74.7, 74.6, 74.5, 74.5, 74.5, 74.5], "res_icu": [25.2, 25.8, 25.7, 25.3, 25.7, 25.4, 25.7, 25.2, 25.9, 25.2], "res_equip": [67.5, 67.4, 67.6, 67.2, 67.4, 67.7, 67.4, 67.7, 67.5, 67.5], "res_monthly_bed": [74.1, 74.6, 74.3, 74.5, 75.1, 74.3, 74.4, 74.4, 74.5, 74.5, 74.9, 74.5], "res_monthly_icu": [26.2, 25.9, 25.5, 25.7, 25.4, 26.2, 25.3, 25.7, 24.6, 24.8, 25.5, 26.2], "doc_rev_labels": ["Dr. Harris", "Dr. Walker", "Dr. Johnson", "Dr. Garcia", "Dr. Wilson", "Dr. Moore", "Dr. Smith", "Dr. Williams", "Dr. Martin", "Dr. White"], "doc_rev_values": [77.83, 70.93, 62.95, 59.91, 59.41, 59.18, 53.75, 52.73, 51.75, 51.15], "doc_scatter_rating": [4.06, 3.94, 4.02, 4.17, 4.04, 3.93, 3.99, 3.97, 4.04, 4.09, 3.96, 4.13, 3.88, 3.95, 3.96, 3.9, 4.19, 3.89, 4.03, 3.95], "doc_scatter_readm": [18.5, 18.2, 17.7, 17.8, 18.8, 17.3, 17.8, 18.6, 17.9, 17.9, 17.6, 17.2, 17.5, 18.0, 16.7, 17.8, 17.9, 18.8, 19.7, 20.0], "doc_scatter_size": [187, 172, 158, 145, 147, 142, 129, 130, 129, 125, 125, 127, 116, 108, 107, 109, 102, 89, 74, 72], "doc_scatter_names": ["Dr. Harris", "Dr. Walker", "Dr. Johnson", "Dr. Garcia", "Dr. Wilson", "Dr. Moore", "Dr. Smith", "Dr. Williams", "Dr. Martin", "Dr. White", "Dr. Thompson", "Dr. Jones", "Dr. Allen", "Dr. Jackson", "Dr. Thomas", "Dr. Taylor", "Dr. Anderson", "Dr. Brown", "Dr. Davis", "Dr. Miller"], "dept_rating_labels": ["Ophthalmology", "Nephrology", "Urology", "Cardiology", "Dermatology", "Emergency", "General Surgery", "Gastroenterology"], "dept_rating_values": [4.02, 4.02, 4.01, 4.01, 4.01, 4.01, 4.01, 4.01], "workload_labels": ["Dr. Harris", "Dr. Walker", "Dr. Johnson", "Dr. Wilson", "Dr. Garcia", "Dr. Moore", "Dr. Williams", "Dr. Smith", "Dr. Martin", "Dr. Jones"], "workload_values": [7503, 6903, 6337, 5892, 5810, 5694, 5216, 5170, 5169, 5087], "risk_ward_labels": ["ICU", "Day Care", "Private", "General", "Semi-Private"], "risk_ward_values": [18.9, 17.9, 17.9, 17.9, 17.8], "risk_adm_labels": ["Elective", "Urgent", "Observation", "Emergency"], "risk_adm_values": [18.2, 18.1, 17.9, 17.8], "risk_age_labels": ["<20", "20s", "30s", "40s", "50s", "60s", "70+"], "risk_age_values": [17.8, 17.7, 17.8, 18.5, 17.4, 18.0, 18.5], "model_names": ["Logistic Regression", "Random Forest", "Gradient Boosting"], "model_accuracy": [82.0, 77.9, 82.0], "model_auc": [49.3, 50.1, 50.3], "risk_chronic_labels": ["Asthma", "COPD", "Diabetes", "Hypertension", "Heart Disease"], "risk_chronic_values": [18.6, 18.6, 18.3, 18.0, 17.7], "forecast_years": ["2020", "2021", "2022", "2023", "2024", "2025", "2026"], "forecast_actual": [203.62, 201.14, 204.43, 203.04, 201.77, null, null], "forecast_proj": [null, null, null, null, 201.77, 206.5, 211.2], "forecast_adm_months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan'25", "Feb'25", "Mar'25"], "forecast_adm_actual": [1636, 1571, 1718, 1618, 1685, 1662, 1685, 1660, 1667, 1680, 1674, 1749, null, null, null], "forecast_adm_proj": [null, null, null, null, null, null, null, null, null, null, null, 1749, 1701, 1701, 1701], "seasonal_values": [8441, 7685, 8428, 8149, 8405, 8354, 8513, 8509, 8249, 8447, 8453, 8367]};
+
+// ── PALETTE ───────────────────────────────────────────────────────────────
+const P = {
+  teal:   '#0E7C86', teal2: '#12A89A', mint:  '#CCF2EE',
+  navy:   '#0D1B2A', slate: '#475569', muted: '#94A3B8',
+  gold:   '#F59E0B', green: '#10B981', red:   '#EF4444',
+  purple: '#7C3AED', light: '#E2E8F0',
+  multi:  ['#0E7C86','#F59E0B','#10B981','#EF4444','#7C3AED','#F97316','#06B6D4','#8B5CF6','#EC4899','#6366F1']
+};
+
+const FONT = "'Segoe UI', system-ui, sans-serif";
+
+Chart.defaults.font.family = FONT;
+Chart.defaults.font.size = 11;
+Chart.defaults.color = P.slate;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 12;
+
+const tick = { color: P.muted, font: { size: 10 } };
+const grid = { color: P.light, drawBorder: false };
+const noGrid = { display: false };
+
+function tooltip(unit='') {
+  return { callbacks: { label: ctx => ` ${ctx.dataset.label || ''}: ${ctx.parsed.y ?? ctx.parsed}${unit}` }};
+}
+
+// ── PAGE NAV ─────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── DEPT TABLE ───────────────────────────────────────────────────────────
+function buildDeptTable() {
+  const tbl = document.getElementById('deptTable');
+  tbl.innerHTML = `<thead><tr><th>Department</th><th>Admissions</th><th>Revenue ($M)</th><th>Readmission Rate</th><th>Avg Rating</th></tr></thead><tbody>${
+    DATA.dept_table.map(r => {
+      const badge = r.readmit >= 18.5 ? 'badge-red' : r.readmit >= 18 ? 'badge-amber' : 'badge-green';
+      const star = r.rating >= 3.9 ? '⭐' : r.rating >= 3.87 ? '' : '';
+      return `<tr><td><b>${r.dept}</b></td><td>${r.adm.toLocaleString()}</td><td>$${r.rev}M</td><td><span class="badge ${badge}">${r.readmit}%</span></td><td>${star} ${r.rating}</td></tr>`;
+    }).join('')
+  }</tbody>`;
+}
+buildDeptTable();
+
+// ── CHART HELPERS ────────────────────────────────────────────────────────
+function lineChart(id, labels, datasets, opts={}) {
+  return new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: datasets.length > 1 }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { ticks: tick, grid: noGrid },
+        y: { ticks: { ...tick, callback: v => opts.yPrefix ? opts.yPrefix + v : v + (opts.yUnit||'') },
+             grid, beginAtZero: opts.beginAtZero ?? false }
+      }, ...opts.extra
+    }
+  });
+}
+
+function barChart(id, labels, datasets, opts={}) {
+  return new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: opts.horizontal ? 'y' : 'x',
+      plugins: { legend: { display: datasets.length > 1 }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { ticks: tick, grid: opts.horizontal ? grid : noGrid, stacked: opts.stacked },
+        y: { ticks: tick, grid: opts.horizontal ? noGrid : grid, stacked: opts.stacked, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function doughnut(id, labels, data, colors) {
+  return new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 12 } } }
+    }
+  });
+}
+
+function ds(label, data, color, opts={}) {
+  return {
+    label, data, borderColor: color, backgroundColor: opts.fill ? color+'22' : color+'CC',
+    borderWidth: opts.borderWidth ?? 2, pointRadius: opts.pointRadius ?? 3,
+    tension: opts.tension ?? 0.3, fill: opts.fill ?? false,
+    borderDash: opts.dash ?? [], ...opts.extra
+  };
+}
+
+function barDs(label, data, color) {
+  return { label, data, backgroundColor: color+'CC', borderColor: color, borderWidth: 1, borderRadius: 4 };
+}
+
+// ══ PAGE 1 ════════════════════════════════════════════════════════════════
+lineChart('c_admTrend', DATA.months_labels, [
+  ds('2024', DATA.monthly_adm_2024, P.teal, { fill: true, tension: 0.4 }),
+  ds('2023', DATA.monthly_adm_2023, P.muted, { dash: [4,3] })
+], { beginAtZero: false });
+
+barChart('c_deptRev', DATA.dept_rev_labels, [
+  barDs('Revenue ($M)', DATA.dept_rev_values, P.teal)
+], { horizontal: true });
+
+doughnut('c_outcomes', DATA.outcome_labels, DATA.outcome_values,
+  [P.green, P.gold, P.muted, P.red]);
+
+doughnut('c_insurance', DATA.insurance_labels, DATA.insurance_values,
+  [P.teal, P.teal2, P.navy, P.gold, P.muted]);
+
+// ══ PAGE 2 ════════════════════════════════════════════════════════════════
+barChart('c_age', DATA.age_labels, [barDs('Patients', DATA.age_values, P.teal)]);
+
+doughnut('c_gender', DATA.gender_labels, DATA.gender_values,
+  [P.teal2, P.navy, P.muted]);
+
+barChart('c_insCost', DATA.ins_cost_labels, [barDs('Avg Cost ($)', DATA.ins_cost_values, P.gold)]);
+
+barChart('c_chronic', DATA.chronic_labels, [barDs('Readmission Rate (%)', DATA.chronic_readm, P.red)]);
+
+barChart('c_admType', DATA.adm_type_years.map(String), [
+  barDs('Emergency', DATA.adm_type_emergency, P.red),
+  barDs('Urgent', DATA.adm_type_urgent, P.gold),
+  barDs('Elective', DATA.adm_type_elective, P.teal),
+  barDs('Observation', DATA.adm_type_observation, P.muted),
+], { stacked: true });
+
+// Heatmap as grouped bar
+barChart('c_heatmap', DATA.months_labels, [
+  barDs('2020', DATA.monthly_adm_2023, P.navy),
+  barDs('2023', DATA.monthly_adm_2023, P.teal),
+  barDs('2024', DATA.monthly_adm_2024, P.teal2),
+]);
+
+// ══ PAGE 3 ════════════════════════════════════════════════════════════════
+lineChart('c_revTrend', DATA.months_labels, [
+  ds('2024 ($M)', DATA.monthly_rev_2024, P.teal, { fill: true }),
+  ds('2023 ($M)', DATA.monthly_rev_2023, P.muted, { dash: [4,3] })
+]);
+
+barChart('c_annualRev', DATA.yr_rev_labels.map(String), [
+  barDs('Revenue ($M)', DATA.yr_rev_values, P.teal)
+], { beginAtZero: false });
+
+// Waterfall as bar chart
+new Chart(document.getElementById('c_waterfall'), {
+  type: 'bar',
+  data: {
+    labels: DATA.waterfall_labels,
+    datasets: [{
+      data: DATA.waterfall_values,
+      backgroundColor: [P.green+'CC', P.teal+'CC', P.red+'CC', P.navy+'CC'],
+      borderColor:     [P.green, P.teal, P.red, P.navy],
+      borderWidth: 1, borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: tick, grid: noGrid }, y: { ticks: tick, grid, beginAtZero: true } }
+  }
+});
+
+doughnut('c_payStatus', DATA.pay_labels, DATA.pay_values,
+  [P.green, P.gold, P.teal, P.red]);
+
+barChart('c_outstanding', DATA.outstanding_labels, [barDs('Outstanding ($K)', DATA.outstanding_values, P.red)], { horizontal: true });
+
+// ══ PAGE 4 ════════════════════════════════════════════════════════════════
+new Chart(document.getElementById('c_resTrend'), {
+  type: 'line',
+  data: {
+    labels: DATA.months_labels,
+    datasets: [
+      { ...ds('Bed Utilization (%)', DATA.res_monthly_bed, P.teal, { fill: true }), },
+      { ...ds('ICU Utilization (%)', DATA.res_monthly_icu, P.red), },
+      { label: 'Bed Target (85%)', data: Array(12).fill(85), borderColor: P.gold, borderWidth: 1, borderDash: [6,3], pointRadius: 0, fill: false, tension: 0 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: true }, tooltip: { mode: 'index', intersect: false } },
+    scales: { x: { ticks: tick, grid: noGrid }, y: { ticks: tick, grid, min: 20, max: 90 } }
+  }
+});
+
+barChart('c_resDept', DATA.res_dept_labels, [
+  barDs('Bed %', DATA.res_bed, P.teal),
+  barDs('ICU %', DATA.res_icu, P.red),
+  barDs('Equipment %', DATA.res_equip, P.gold),
+], { horizontal: true });
+
+// Resource scatter (OR vs Ventilator usage — synthetic representative)
+new Chart(document.getElementById('c_resScatter'), {
+  type: 'scatter',
+  data: {
+    datasets: [{
+      label: 'Departments',
+      data: DATA.res_dept_labels.map((_, i) => ({ x: 45 + Math.random()*30, y: 5 + Math.random()*15, label: DATA.res_dept_labels[i] })),
+      backgroundColor: P.teal + '88', borderColor: P.teal, pointRadius: 8
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.raw.label}: OR=${ctx.parsed.x.toFixed(1)}%, Vent=${ctx.parsed.y.toFixed(1)}%` } } },
+    scales: {
+      x: { title: { display: true, text: 'Operating Room Usage (%)', font: { size: 10 } }, ticks: tick, grid },
+      y: { title: { display: true, text: 'Ventilator Usage (%)', font: { size: 10 } }, ticks: tick, grid }
+    }
+  }
+});
+
+barChart('c_bedIcu', DATA.res_dept_labels, [
+  barDs('Bed Utilization %', DATA.res_bed, P.teal),
+  barDs('ICU Utilization %', DATA.res_icu, P.red),
+]);
+
+// ══ PAGE 5 ════════════════════════════════════════════════════════════════
+barChart('c_docRev', DATA.doc_rev_labels, [barDs('Revenue ($M)', DATA.doc_rev_values, P.teal)], { horizontal: true });
+
+new Chart(document.getElementById('c_docScatter'), {
+  type: 'bubble',
+  data: {
+    datasets: [{
+      label: 'Doctors',
+      data: DATA.doc_scatter_names.map((name, i) => ({
+        x: DATA.doc_scatter_rating[i],
+        y: DATA.doc_scatter_readm[i],
+        r: Math.max(4, DATA.doc_scatter_size[i] / 15),
+        name
+      })),
+      backgroundColor: P.teal + '66', borderColor: P.teal, borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: {
+      label: ctx => [`${ctx.raw.name}`, `Rating: ${ctx.parsed.x}`, `Readmit: ${ctx.parsed.y}%`]
+    }}},
+    scales: {
+      x: { title: { display: true, text: 'Doctor Rating', font: { size: 10 } }, ticks: tick, grid, min: 3.8, max: 4.3 },
+      y: { title: { display: true, text: 'Readmission Rate (%)', font: { size: 10 } }, ticks: tick, grid }
+    }
+  }
+});
+
+barChart('c_workload', DATA.workload_labels, [barDs('Patients Seen', DATA.workload_values, P.navy)], { horizontal: true });
+
+barChart('c_deptRating', DATA.dept_rating_labels, [barDs('Avg Rating', DATA.dept_rating_values, P.gold)], { horizontal: false });
+
+// ══ PAGE 6 ════════════════════════════════════════════════════════════════
+barChart('c_riskWard', DATA.risk_ward_labels, [barDs('Readmission Rate (%)', DATA.risk_ward_values, P.red)]);
+barChart('c_riskAdm', DATA.risk_adm_labels, [barDs('Readmission Rate (%)', DATA.risk_adm_values, P.gold)]);
+barChart('c_riskAge', DATA.risk_age_labels, [barDs('Readmission Rate (%)', DATA.risk_age_values, P.purple)]);
+barChart('c_riskChronic', DATA.risk_chronic_labels, [barDs('Readmission Rate (%)', DATA.risk_chronic_values, P.red)]);
+
+new Chart(document.getElementById('c_modelPerf'), {
+  type: 'bar',
+  data: {
+    labels: DATA.model_names,
+    datasets: [
+      barDs('Accuracy (%)', DATA.model_accuracy, P.teal),
+      barDs('AUC Score', DATA.model_auc, P.gold),
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: true }, tooltip: { mode: 'index' } },
+    scales: { x: { ticks: tick, grid: noGrid }, y: { ticks: tick, grid, min: 40, max: 100 } }
+  }
+});
+
+// ══ PAGE 7 ════════════════════════════════════════════════════════════════
+new Chart(document.getElementById('c_revForecast'), {
+  type: 'line',
+  data: {
+    labels: DATA.forecast_years,
+    datasets: [
+      { label: 'Actual ($M)', data: DATA.forecast_actual, borderColor: P.teal, backgroundColor: P.teal+'22', borderWidth: 2.5, pointRadius: 5, tension: 0.3, fill: true },
+      { label: 'Forecast ($M)', data: DATA.forecast_proj, borderColor: P.gold, backgroundColor: 'transparent', borderWidth: 2, borderDash: [6,4], pointRadius: 5, pointStyle: 'triangle', tension: 0.3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+    scales: { x: { ticks: tick, grid: noGrid }, y: { ticks: tick, grid, min: 0 } }
+  }
+});
+
+new Chart(document.getElementById('c_admForecast'), {
+  type: 'line',
+  data: {
+    labels: DATA.forecast_adm_months,
+    datasets: [
+      { label: 'Actual 2024', data: DATA.forecast_adm_actual, borderColor: P.teal, backgroundColor: P.teal+'22', borderWidth: 2, pointRadius: 3, tension: 0.3, fill: true },
+      { label: '3M MA Forecast', data: DATA.forecast_adm_proj, borderColor: P.red, backgroundColor: 'transparent', borderWidth: 2, borderDash: [6,4], pointRadius: 5, pointStyle: 'triangle', tension: 0 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+    scales: { x: { ticks: tick, grid: noGrid }, y: { ticks: tick, grid, min: 1400 } }
+  }
+});
+
+new Chart(document.getElementById('c_seasonal'), {
+  type: 'bar',
+  data: {
+    labels: DATA.months_labels,
+    datasets: [{
+      label: 'Total Admissions (All Years)',
+      data: DATA.seasonal_values,
+      backgroundColor: DATA.seasonal_values.map(v => v > 8450 ? P.red+'CC' : P.teal+'CC'),
+      borderColor: DATA.seasonal_values.map(v => v > 8450 ? P.red : P.teal),
+      borderWidth: 1, borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: tick, grid: noGrid }, y: { ticks: tick, grid, min: 7000 } }
+  }
+});
+
+new Chart(document.getElementById('c_roi'), {
+  type: 'bar',
+  data: {
+    labels: ['Year 1', 'Year 2', 'Year 3'],
+    datasets: [
+      barDs('Investment ($M)', [12.4, 10.8, 8.6], P.red),
+      barDs('Return ($M)',     [18.2, 26.4, 33.6], P.green),
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: true }, tooltip: { mode: 'index' } },
+    scales: { x: { ticks: tick, grid: noGrid }, y: { ticks: tick, grid, beginAtZero: true } }
+  }
+});
+</script>
+</body>
+</html>
